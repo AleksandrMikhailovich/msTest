@@ -4,6 +4,7 @@ import com.itm.space.backendresources.api.request.UserRequest;
 import com.itm.space.backendresources.api.response.UserResponse;
 import com.itm.space.backendresources.exception.BackendResourcesException;
 import com.itm.space.backendresources.mapper.UserMapper;
+import com.itm.space.backendresources.mock.IdentityMock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -25,18 +26,20 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final Keycloak keycloakClient;
+//    private final Keycloak keycloakClient;
+    private final IdentityMock identityMock;
     private final UserMapper userMapper;
 
-    @Value("${keycloak.realm}")
-    private String realm;
+//    @Value("${keycloak.realm}")
+//    private String realm;
 
     public void createUser(UserRequest userRequest) {
         CredentialRepresentation password = preparePasswordRepresentation(userRequest.getPassword());
         UserRepresentation user = prepareUserRepresentation(userRequest, password);
         try {
-            Response response = keycloakClient.realm(realm).users().create(user);
-            String userId = CreatedResponseUtil.getCreatedId(response);
+//            Response response = keycloakClient.realm(realm).users().create(user);
+//            String userId = CreatedResponseUtil.getCreatedId(response);
+            String userId = identityMock.createUser(user);
             log.info("Created UserId: {}", userId);
         } catch (WebApplicationException ex) {
             log.error("Exception on \"createUser\": ", ex);
@@ -50,10 +53,13 @@ public class UserServiceImpl implements UserService {
         List<RoleRepresentation> userRoles;
         List<GroupRepresentation> userGroups;
         try {
-            userRepresentation = keycloakClient.realm(realm).users().get(String.valueOf(id)).toRepresentation();
-            userRoles = keycloakClient.realm(realm)
-                    .users().get(String.valueOf(id)).roles().getAll().getRealmMappings();
-            userGroups = keycloakClient.realm(realm).users().get(String.valueOf(id)).groups();
+//            userRepresentation = keycloakClient.realm(realm).users().get(String.valueOf(id)).toRepresentation();
+//            userRoles = keycloakClient.realm(realm)
+//                    .users().get(String.valueOf(id)).roles().getAll().getRealmMappings();
+//            userGroups = keycloakClient.realm(realm).users().get(String.valueOf(id)).groups();
+            userRepresentation = identityMock.getUserById(id);
+            userRoles  = identityMock.getUserRoles(id);
+            userGroups = identityMock.getUserGroups(id);
         } catch (RuntimeException ex) {
             log.error("Exception on \"getUserById\": ", ex);
             throw new BackendResourcesException(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
